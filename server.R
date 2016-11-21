@@ -3,16 +3,14 @@ shinyServer(
     
     data_layout <- reactive({
       if(input$selectVisAlgo == 1)
-        layout.kamada.kawai(city_networks[[input$selectNetwork]])
-      else if(input$selectVisAlgo == 2)
-        layout.sphere(city_networks[[input$selectNetwork]])
-      else if(input$selectVisAlgo == 3)
         layout.fruchterman.reingold(city_networks[[input$selectNetwork]])
-      else if(input$selectVisAlgo == 4)
+      else if(input$selectVisAlgo == 2)
+        layout.kamada.kawai(city_networks[[input$selectNetwork]])
+      else if(input$selectVisAlgo == 3)
         layout_in_circle(city_networks[[input$selectNetwork]] )
-      else if(input$selectVisAlgo == 5)
+      else if(input$selectVisAlgo == 4)
         layout.spring(city_networks[[input$selectNetwork]])
-      else if(input$selectVisAlgo == 6)
+      else if(input$selectVisAlgo == 5)
         layout.gem(city_networks[[input$selectNetwork]])
     })
     
@@ -60,7 +58,6 @@ shinyServer(
       plot(network_selected,
            vertex.frame.color = NA,
            vertex.label.cex = .9,
-           vertex.size = 10,
            vertex.label = label_toggle,
            edge.color=show_edge$color,
            edge.width = show_edge$width,
@@ -87,7 +84,7 @@ shinyServer(
       else
         label_toggle <- ""
       
-      # set.seed(5)
+      set.seed(5)
       data_layout <- data_layout()
       
       # edge attributes
