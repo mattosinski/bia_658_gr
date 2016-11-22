@@ -1,5 +1,7 @@
+#This is for research purposes only
+
 #install igraph
-install.packages('networkD3')
+#install.packages('networkD3')
 library(networkD3)
 library(igraph)
 library(dplyr)
@@ -19,7 +21,7 @@ summary(insta_graph)
 src <- insta$rephoto
 target <- insta$rephotography
 
-networkData <- data.frame(src,target)
+networkData <- data.frame(src,target) # create network
 
 #plot
 simpleNetwork(networkData, zoom = TRUE, textColour = "#000099", opacity=0.8, nodeColour = "#b3d9ff",
@@ -28,9 +30,9 @@ simpleNetwork(networkData, zoom = TRUE, textColour = "#000099", opacity=0.8, nod
 
 # centralization measure, use mode option for in/out degree
 degree(insta_graph)
+
 # use table to get a degree distribution
 table(degree(insta_graph))
-
 degree_cent <- as.data.frame(degree(insta_graph, normalized = TRUE))
 betweenness(graph = insta_graph, normalized = FALSE)
 betweenness(graph = insta_graph, normalized = TRUE)
@@ -42,16 +44,15 @@ evcent(insta_graph)
 #Note that `evcent(g)` gives a list that contains multiple outputs (see help for evcent using `?evcent`), in order to extract the element we want from a list we use the $.
 evcent(insta_graph)$vector
 
-
-# load graph from (Graph Modelling Language) GML format
-
 # number of edges and nodes(vertices)
 ecount(insta_graph)
 vcount(insta_graph)
+
 # visualization
 #plot(g2)
 # clustering coefficient
 transitivity(insta_graph, type = "local")
+
 # degree centralization
 centralization.degree(insta_graph)
 

@@ -5,30 +5,27 @@ library(tidyr)
 library(shiny)
 library(ggplot2)
 library(ggmap)
-
-# If error, install with install.packages("tidytext", dependency = TRUE)
 library(tidytext)
+# If error, install with install.packages("tidytext", dependency = TRUE)
 
-########### Get places data set   ##################
+
+########### Get Cities data set   ##################
 places <- read_csv("http://simplemaps.com/static/demos/resources/us-cities/cities.csv")
 place_names = tolower(places$city)
-places$city <- tolower(places$city)
-places$city <- gsub(" ", "", place_names)
-places<-unite(places, id, c(city, state), remove=FALSE)
-
-
-#rm(places)
+places$city <- tolower(places$city) #move to lower case
+places$city <- gsub(" ", "", place_names) #remove the space
+places<-unite(places, id, c(city, state), remove=FALSE) #created a uniqueID
 place_names_no_spaces <- gsub(" ", "", place_names)
 
-#get top cities
+#get top cities by population
 top_cities <- read.csv("http://img.ezlocal.com/data/Top5000Population.csv", header=FALSE,encoding="UTF-8", stringsAsFactors=FALSE)
 colnames(top_cities) <- c("city","state","population")
-top_cities$city <- tolower(top_cities$city)
-top_cities$city <- gsub(" ", "", top_cities$city)
-top_cities<-unite(top_cities, id, c(city, state), remove=FALSE)
-top_cities<- top_cities[-(1000:5000), ]
+top_cities$city <- tolower(top_cities$city) #move to lower case
+top_cities$city <- gsub(" ", "", top_cities$city) #remove the space
+top_cities<-unite(top_cities, id, c(city, state), remove=FALSE) #create a unique ID
+top_cities<- top_cities[-(1000:5000), ] #Filter only the top1000 cities by population
 
-#combine lat_long into top_cities
+#combine the lat_long data from places with the top_cities
 top_cities_2 <- (merge(top_cities, places, by = 'id'))
 top_cities_2<- subset(top_cities_2,!duplicated(top_cities_2$id))
 top_cities_2 <- subset(top_cities_2, select= c("id", "city.x","state.x","zip","lat","lng"))
@@ -36,7 +33,22 @@ colnames(top_cities_2) <- c("id","city","state","zip","lat","lng")
 
 ##################################################
 
-########### read csv and transform to network   #
+####### create adjacency list function ######################
+create_adj_list = function(df){
+  # Input: a dataframe with a column "tokens"
+  # Output: all possible 2-combinations (sorted) of the unique tokens
+  unique_tokens = unique(df$tokens)
+  adj_list = data.frame()
+  if(length(unique_tokens) >= 2) {
+    all_combins = t(combn(unique_tokens, 2))
+    all_combins = t(apply(all_combins, 1, sort))
+    adj_list = data.frame(all_combins, stringsAsFactors = FALSE)
+  }
+  return(adj_list)
+}
+##################################################
+
+########### read Instagram csv files and transform to network format##################
 network_from_csv <- function(file_name){
   insta <- read_csv(file_name)
   # not sure what the proper column names should be.
@@ -58,37 +70,6 @@ network_from_csv <- function(file_name){
   
 }
 ##################################################
-
-####### create adjacency list ######################
-create_adj_list = function(df){
-  # Input: a dataframe with a column "tokens"
-  # Output: all possible 2-combinations (sorted) of the unique tokens
-  unique_tokens = unique(df$tokens)
-  adj_list = data.frame()
-  if(length(unique_tokens) >= 2) {
-    all_combins = t(combn(unique_tokens, 2))
-    all_combins = t(apply(all_combins, 1, sort))
-    adj_list = data.frame(all_combins, stringsAsFactors = FALSE)
-  }
-  return(adj_list)
-}
-##################################################
-# remember to set your respective directory
-
-dir=setwd("/Users/Matt/Documents/Stevens/BIA 658 Social Network Analytics/Instagram")
-############## Main Program ########################
-insta_csvs <- list.files(path=paste(getwd(), "/Data", sep=""),pattern="InstaOutputlist_.*\\.csv") 
-
-city_networks = NULL
-
-for(index in 1:length(insta_csvs)){
-  city <- gsub("InstaOutputlist_", "", gsub(".csv", "", insta_csvs[index]))
-  
-  city_network <- network_from_csv(paste("Data/", insta_csvs[index], sep=""))
-  
-  city_networks[[city]] <- city_network 
-}
-
 ###############generate map################
 map_from_network <- function(network_graph){
   
@@ -109,8 +90,24 @@ map_from_network <- function(network_graph){
   ggmap(mapgilbert) +
     geom_point(data = map_table, aes(x = lng, y = lat, fill = "red", alpha = 0.8), size = 5, shape = 21) +
     guides(fill=FALSE, alpha=FALSE, size=FALSE)
-
   
+  
+}
+#map_from_network(city_networks[['Chapel Hill']]) #test the map
+
+# remember to set your respective directory to the location of the Data
+dir=setwd("/Users/Matt/Documents/Stevens/BIA 658 Social Network Analytics/Instagram")
+
+############## Main Program ########################
+insta_csvs <- list.files(path=paste(getwd(), "/Data", sep=""),pattern="InstaOutputlist_.*\\.csv") 
+city_networks = NULL
+
+#for each city's hashtag CSV file, generate a network and store in a list
+for(index in 1:length(insta_csvs)){
+  
+  city <- gsub("InstaOutputlist_", "", gsub(".csv", "", insta_csvs[index]))
+  city_network <- network_from_csv(paste("Data/", insta_csvs[index], sep=""))
+  city_networks[[city]] <- city_network 
 }
 
 setwd("/Users/Matt/Documents/Stevens/BIA 658 Social Network Analytics/Instagram/Git/bia_658_gr")
@@ -119,5 +116,5 @@ runApp()
 
 
 
-#map_from_network(city_networks[['Chapel Hill']]) #test the map
+
 

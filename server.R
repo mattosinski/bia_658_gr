@@ -1,6 +1,7 @@
 shinyServer(
   function(input, output){
     
+    #visualization options
     data_layout <- reactive({
       if(input$selectVisAlgo == 1)
         layout.fruchterman.reingold(city_networks[[input$selectNetwork]])
@@ -30,6 +31,7 @@ shinyServer(
       
       data_layout <- data_layout()
       
+      #Edge weight calculations
       E(network_selected)$edge.color <- "#d3d3d3"
       E(network_selected)[E(network_selected)$weight > 2 * mean(E(network_selected )$weight)]$edge.color <- "red"
       
@@ -54,7 +56,7 @@ shinyServer(
         show_edge$width <- NA
       }
       
-
+      #plot the network depending on the choices above
       plot(network_selected,
            vertex.frame.color = NA,
            vertex.label.cex = .9,
@@ -64,6 +66,7 @@ shinyServer(
            layout =  data_layout)
       
     })
+    #display a table of the degree centrality
     output$degreeTable = renderTable({
       network_selected <- city_networks[[input$selectNetwork]]
       degree_cent <- as.data.frame(degree(network_selected, normalized = TRUE))
@@ -73,6 +76,7 @@ shinyServer(
       arrange(deg_cent,desc(Degree_Centrality))
     })
     
+    #display a section that has the Community Detection portion
     output$communityDetection <- renderPlot({
       network_selected <- city_networks[[input$selectNetwork]]
       community = fastgreedy.community(network_selected)
@@ -119,12 +123,14 @@ shinyServer(
            layout=data_layout )
       
     })
+    #display a Map
     output$geographicView <- renderPlot({
       network_selected <- city_networks[[input$selectNetwork]]
       #degree_d <- degree.distribution(network_selected, cumulative=F, mode="all")
       plot(map_from_network(network_selected))
       
     })
+    #display the degree distribution
     output$degreeDistribution <- renderPlot({
       network_selected <- city_networks[[input$selectNetwork]]
       degree_d <- degree.distribution(network_selected, cumulative=F, mode="all")
